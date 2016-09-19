@@ -1,5 +1,7 @@
 body {
-    padding-top: 200px;
+    padding-top: 150px;
+    width: 550px;
+    margin: auto;
 }
 
 h1 {
@@ -7,12 +9,8 @@ h1 {
     text-align: center;
 }
 
-#button-container {
-    width: 500px;
-    margin: auto;
-}
-
 #button-container a:first-child {
+    margin-left: 50px;
     float: left;
 }
 
@@ -21,15 +19,28 @@ h1 {
 }
 
 .row {
-    width: 500px;
-    margin: auto;
+    width: 550px;
     display: flex;
     flex-direction: horizontal;
 }
 
 .tile {
+    font-family: "impact";
+    font-style: italic;
+    text-align: center;
+    box-sizing: border-box;
     width: 50px;
     height: 50px;
+}
+
+.y-index {
+    padding-top: 15px;
+    border-bottom: 2px dashed black;
+}
+
+.x-index {
+    padding-top: 15px;
+    border-left: 2px dashed black;
 }
 
 .shot {

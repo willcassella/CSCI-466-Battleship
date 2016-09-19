@@ -16,11 +16,14 @@ class BattleShipGame:
     TILE_CRUISER = 'R'
     TILE_SUBMARINE = 'S'
     TILE_DESTROYER = 'D'
+    TILE_NAME = {TILE_WATER: 'water', TILE_CARRIER: 'carrier', TILE_BATTLESHIP: 'battleship',
+                 TILE_CRUISER: 'cruiser', TILE_SUBMARINE: 'submarine', TILE_DESTROYER: 'destroyer'}
 
     def __init__(self, path):
         # Initialze board and record of opponent's shots
         self.board = [[None for x in range(BattleShipGame.BOARD_WIDTH)] for y in range(BattleShipGame.BOARD_HEIGHT)]
         self.opponent_shots = [[False for x in range(BattleShipGame.BOARD_WIDTH)] for y in range(BattleShipGame.BOARD_HEIGHT)]
+        self.lost_ships = []
 
         # Load board configuration from file
         with open(path, 'r') as f:
@@ -74,6 +77,7 @@ class BattleShipGame:
                 return (BattleShipGame.SHOT_HIT, result)
 
         # They must have sunk
+        self.lost_ships.append(result)
         return (BattleShipGame.SHOT_SINK, result)
 
 
@@ -84,38 +88,46 @@ def wfile_writestr(wfile, value):
 def render_own_board(wfile, game):
         wfile_writestr(wfile, '<html><head><title>Board</title><link rel="stylesheet" href="css/board.css"></head><body>')
         wfile_writestr(wfile, '<h1>BATTLESHIP</h1>')
+
+        # Render x-index tiles
+        wfile_writestr(wfile, '<div class="row"><div class="tile"></div>')
+        for x in range(BattleShipGame.BOARD_WIDTH):
+            wfile_writestr(wfile, '<div class="tile x-index">%s</div>' % x)
+        wfile_writestr(wfile, '</div>') # Close x-index row
+
+        # Render tiles
+        for y in range(BattleShipGame.BOARD_HEIGHT):
+            wfile_writestr(wfile, '<div class="row">')
+            wfile_writestr(wfile, '<div class="tile y-index">%s</div>' % y)
+
+            for x in range(BattleShipGame.BOARD_WIDTH):
+                # Get the class for the tile
+                if game.board[x][y] == BattleShipGame.TILE_WATER:
+                    tile = "water"
+                else:
+                    tile = "ship " + BattleShipGame.TILE_NAME[game.board[x][y]]
+
+                wfile_writestr(wfile, '<div class="tile %s" title="%s,%s">' % (tile, x, y))
+                if game.opponent_shots[x][y]:
+                    wfile_writestr(wfile, '<div class="shot"></div>')
+
+                wfile_writestr(wfile, '</div>') # Close tile div
+            wfile_writestr(wfile, '</div>') # Close row div
+
+        # Render buttons
         wfile_writestr(wfile, '<div id="button-container">')
         wfile_writestr(wfile, '<a href="own_board.html"><button>Refresh</button></a>')
         wfile_writestr(wfile, '<a href="opponent_board.html"><button>View Opponent\'s Board</button></a>')
         wfile_writestr(wfile, '</div>')
 
-        for y in range(BattleShipGame.BOARD_HEIGHT):
-            wfile_writestr(wfile, '<div class="row">')
-            for x in range(BattleShipGame.BOARD_WIDTH):
+        # Render list of lost ships
+        if len(game.lost_ships) > 0:
+            wfile_writestr(wfile, "<p>You have lost:</p><ul>")
+            for lost in game.lost_ships:
+                wfile_writestr(wfile, "<li>%s</li>" % BattleShipGame.TILE_NAME[lost])
+            wfile_writestr(wfile, "</ul>") # Close ship list
 
-                # Get the class for the tile
-                if game.board[x][y] == BattleShipGame.TILE_WATER:
-                    tile = "water"
-                elif game.board[x][y] == BattleShipGame.TILE_CARRIER:
-                    tile = "ship carrier"
-                elif game.board[x][y] == BattleShipGame.TILE_BATTLESHIP:
-                    tile = "ship battleship"
-                elif game.board[x][y] == BattleShipGame.TILE_CRUISER:
-                    tile = "ship cruiser"
-                elif game.board[x][y] == BattleShipGame.TILE_SUBMARINE:
-                    tile = "ship submarine"
-                else:
-                    tile = "ship destroyer"
-
-                wfile_writestr(wfile, '<div class="tile %s">' % tile)
-
-                if game.opponent_shots[x][y]:
-                    wfile_writestr(wfile, '<div class="shot"></div>')
-
-                wfile_writestr(wfile, '</div>')
-
-            wfile_writestr(wfile, '</div>')
-        wfile_writestr(wfile, '</body></html>')
+        wfile_writestr(wfile, '</body></html>') # Close html
 
 
 def render_opponent_board(wfile, path):
