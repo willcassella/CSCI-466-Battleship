@@ -1,4 +1,28 @@
+body {
+    padding-top: 200px;
+}
+
+h1 {
+    font-family: "stencil";
+    text-align: center;
+}
+
+#button-container {
+    width: 500px;
+    margin: auto;
+}
+
+#button-container a:first-child {
+    float: left;
+}
+
+#button-container a:last-child {
+    float: right;
+}
+
 .row {
+    width: 500px;
+    margin: auto;
     display: flex;
     flex-direction: horizontal;
 }

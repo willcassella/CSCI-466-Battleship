@@ -83,6 +83,11 @@ def wfile_writestr(wfile, value):
 
 def render_own_board(wfile, game):
         wfile_writestr(wfile, '<html><head><title>Board</title><link rel="stylesheet" href="css/board.css"></head><body>')
+        wfile_writestr(wfile, '<h1>BATTLESHIP</h1>')
+        wfile_writestr(wfile, '<div id="button-container">')
+        wfile_writestr(wfile, '<a href="own_board.html"><button>Refresh</button></a>')
+        wfile_writestr(wfile, '<a href="opponent_board.html"><button>View Opponent\'s Board</button></a>')
+        wfile_writestr(wfile, '</div>')
 
         for y in range(BattleShipGame.BOARD_HEIGHT):
             wfile_writestr(wfile, '<div class="row">')
