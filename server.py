@@ -30,8 +30,6 @@ class BattleShipGame:
                     self.board[x][y] = line[x]
                 y += 1
 
-        print(self.board)
-
 
     """The shot fired was out of bounds"""
     SHOT_OUT_OF_BOUNDS = -2
@@ -72,7 +70,7 @@ class BattleShipGame:
 
         # Check if any unhit squares with this ship exist on this column
         for checkY in range(0, BattleShipGame.BOARD_HEIGHT):
-            if self.board[x][checkY] == result and not self.opponent_shots[x][checlY]:
+            if self.board[x][checkY] == result and not self.opponent_shots[x][checkY]:
                 return (BattleShipGame.SHOT_HIT, result)
 
         # They must have sunk
@@ -93,18 +91,24 @@ def render_own_board(wfile, game):
                 # Get the class for the tile
                 if game.board[x][y] == BattleShipGame.TILE_WATER:
                     tile = "water"
+                elif game.board[x][y] == BattleShipGame.TILE_CARRIER:
+                    tile = "ship carrier"
+                elif game.board[x][y] == BattleShipGame.TILE_BATTLESHIP:
+                    tile = "ship battleship"
+                elif game.board[x][y] == BattleShipGame.TILE_CRUISER:
+                    tile = "ship cruiser"
                 elif game.board[x][y] == BattleShipGame.TILE_SUBMARINE:
-                    tile = "submarine"
+                    tile = "ship submarine"
                 else:
-                    tile = "ship"
+                    tile = "ship destroyer"
 
-                # Get the class for the status of the tile
+                wfile_writestr(wfile, '<div class="tile %s">' % tile)
+
                 if game.opponent_shots[x][y]:
-                    status = "shot"
-                else:
-                    status = ""
+                    wfile_writestr(wfile, '<div class="shot"></div>')
 
-                wfile_writestr(wfile, '<div class="tile %s %s"></div>' % (tile, status))
+                wfile_writestr(wfile, '</div>')
+
             wfile_writestr(wfile, '</div>')
         wfile_writestr(wfile, '</body></html>')
 
