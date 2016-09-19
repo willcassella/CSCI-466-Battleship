@@ -23,14 +23,12 @@ try:
 
     # Load the existing view of the opponents board
     game = BattleShip.load_bs_game("opponent_board.txt")
-    print(response_data)
 
     # Check the result
     if response_data[b'hit'][0] == b'1':
         game.board[x][y] = BattleShip.BSGame.TILE_UNKNOWN_SHIP
         if b'sink' in response_data:
             ship = response_data[b'sink'][0].decode("ascii")
-            print(ship)
             game.lost_ships.append(ship)
             print("You sunk a {}!".format(BattleShip.BSGame.TILE_NAME[ship]))
         else:
