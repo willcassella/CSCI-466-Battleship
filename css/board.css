@@ -48,6 +48,10 @@ h1 {
     height: 50px;
 }
 
+.unknown {
+    background-image: url("../images/unknown.png");
+}
+
 .water {
     background-image: url("../images/water.png");
 }

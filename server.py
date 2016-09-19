@@ -3,139 +3,87 @@ import os
 from sys import argv
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
-
-class BattleShipGame:
-    """Width and height of the board"""
-    BOARD_WIDTH = 10
-    BOARD_HEIGHT = 10
-
-    """The types of tiles that appear on the board"""
-    TILE_WATER = '_'
-    TILE_CARRIER = 'C'
-    TILE_BATTLESHIP = 'B'
-    TILE_CRUISER = 'R'
-    TILE_SUBMARINE = 'S'
-    TILE_DESTROYER = 'D'
-    TILE_NAME = {TILE_WATER: 'water', TILE_CARRIER: 'carrier', TILE_BATTLESHIP: 'battleship',
-                 TILE_CRUISER: 'cruiser', TILE_SUBMARINE: 'submarine', TILE_DESTROYER: 'destroyer'}
-
-    def __init__(self, path):
-        # Initialze board and record of opponent's shots
-        self.board = [[None for x in range(BattleShipGame.BOARD_WIDTH)] for y in range(BattleShipGame.BOARD_HEIGHT)]
-        self.opponent_shots = [[False for x in range(BattleShipGame.BOARD_WIDTH)] for y in range(BattleShipGame.BOARD_HEIGHT)]
-        self.lost_ships = []
-
-        # Load board configuration from file
-        with open(path, 'r') as f:
-            y = 0
-            for line in f.readlines():
-                for x in range(BattleShipGame.BOARD_WIDTH):
-                    self.board[x][y] = line[x]
-                y += 1
-
-
-    """The shot fired was out of bounds"""
-    SHOT_OUT_OF_BOUNDS = -2
-
-    """A shot has previously been fired in this position"""
-    SHOT_REDUNDANT = -1
-
-    """The shot didn't hit anything'"""
-    SHOT_MISS = 0
-
-    """The shot hit something, but did not sink anything"""
-    SHOT_HIT = 1
-
-    """The shot hit something, and sank it"""
-    SHOT_SINK = 2
-
-    def fire(self, x, y):
-        # Make sure the shot is within bounds of the board
-        if not 0 <= x < BattleShipGame.BOARD_WIDTH or not 0 <= y < BattleShipGame.BOARD_HEIGHT:
-             return (BattleShipGame.SHOT_OUT_OF_BOUNDS, None)
-
-        # Make sure the opponent hasn't shot here before
-        if self.opponent_shots[x][y]:
-            return (BattleShipGame.SHOT_REDUNDANT, None)
-
-        # Register the opponents shot, and figure out if they missed/hit/sunk anything
-        self.opponent_shots[x][y] = True
-        result = self.board[x][y]
-
-        # Check if they missed
-        if result == BattleShipGame.TILE_WATER:
-            return (BattleShipGame.SHOT_MISS, None)
-
-        # Check if any unhit squares with this ship exist on this row
-        for checkX in range(0, BattleShipGame.BOARD_WIDTH):
-            if self.board[checkX][y] == result and not self.opponent_shots[checkX][y]:
-                return (BattleShipGame.SHOT_HIT, result)
-
-        # Check if any unhit squares with this ship exist on this column
-        for checkY in range(0, BattleShipGame.BOARD_HEIGHT):
-            if self.board[x][checkY] == result and not self.opponent_shots[x][checkY]:
-                return (BattleShipGame.SHOT_HIT, result)
-
-        # They must have sunk
-        self.lost_ships.append(result)
-        return (BattleShipGame.SHOT_SINK, result)
-
+import BattleShip
 
 def wfile_writestr(wfile, value):
     wfile.write(bytes(value, "utf-8"))
 
 
+def render_board(wfile, game):
+    wfile_writestr(wfile, '<h1>BATTLESHIP</h1>')
+
+    # Render x-index tiles
+    wfile_writestr(wfile, '<div class="row"><div class="tile"></div>')
+    for x in range(BattleShip.BSGame.BOARD_WIDTH):
+        wfile_writestr(wfile, '<div class="tile x-index">%s</div>' % x)
+    wfile_writestr(wfile, '</div>') # Close x-index row
+
+    # Render tiles
+    for y in range(BattleShip.BSGame.BOARD_HEIGHT):
+        wfile_writestr(wfile, '<div class="row">')
+        wfile_writestr(wfile, '<div class="tile y-index">%s</div>' % y)
+
+        for x in range(BattleShip.BSGame.BOARD_WIDTH):
+            # Get the class for the tile
+            if game.board[x][y] == BattleShip.BSGame.TILE_WATER:
+                tile = "water"
+            elif game.board[x][y] == BattleShip.BSGame.TILE_UNKNOWN:
+                tile = "unknown"
+            else:
+                tile = "ship " + BattleShip.BSGame.TILE_NAME[game.board[x][y]]
+
+            wfile_writestr(wfile, '<div class="tile %s" title="%s,%s">' % (tile, x, y))
+            if game.opponent_shots[x][y] or game.board[x][y] == BattleShip.BSGame.TILE_UNKNOWN_SHIP:
+                wfile_writestr(wfile, '<div class="shot"></div>')
+
+            wfile_writestr(wfile, '</div>') # Close tile div
+        wfile_writestr(wfile, '</div>') # Close row div
+
+
+def render_sunk_list(wfile, game, message):
+    # Render list of sunken ships
+    if len(game.lost_ships) > 0:
+        wfile_writestr(wfile, "<p>%s</p><ul>" % message)
+        for lost in game.lost_ships:
+            wfile_writestr(wfile, "<li>%s</li>" % BattleShip.BSGame.TILE_NAME[lost])
+        wfile_writestr(wfile, "</ul>") # Close ship list
+
 def render_own_board(wfile, game):
-        wfile_writestr(wfile, '<html><head><title>Board</title><link rel="stylesheet" href="css/board.css"></head><body>')
-        wfile_writestr(wfile, '<h1>BATTLESHIP</h1>')
+        # Render header
+        wfile_writestr(wfile, '<html><head><title>Battleship</title><link rel="stylesheet" href="css/board.css"></head><body>')
 
-        # Render x-index tiles
-        wfile_writestr(wfile, '<div class="row"><div class="tile"></div>')
-        for x in range(BattleShipGame.BOARD_WIDTH):
-            wfile_writestr(wfile, '<div class="tile x-index">%s</div>' % x)
-        wfile_writestr(wfile, '</div>') # Close x-index row
-
-        # Render tiles
-        for y in range(BattleShipGame.BOARD_HEIGHT):
-            wfile_writestr(wfile, '<div class="row">')
-            wfile_writestr(wfile, '<div class="tile y-index">%s</div>' % y)
-
-            for x in range(BattleShipGame.BOARD_WIDTH):
-                # Get the class for the tile
-                if game.board[x][y] == BattleShipGame.TILE_WATER:
-                    tile = "water"
-                else:
-                    tile = "ship " + BattleShipGame.TILE_NAME[game.board[x][y]]
-
-                wfile_writestr(wfile, '<div class="tile %s" title="%s,%s">' % (tile, x, y))
-                if game.opponent_shots[x][y]:
-                    wfile_writestr(wfile, '<div class="shot"></div>')
-
-                wfile_writestr(wfile, '</div>') # Close tile div
-            wfile_writestr(wfile, '</div>') # Close row div
+        # Render board
+        render_board(wfile, game)
 
         # Render buttons
         wfile_writestr(wfile, '<div id="button-container">')
         wfile_writestr(wfile, '<a href="own_board.html"><button>Refresh</button></a>')
         wfile_writestr(wfile, '<a href="opponent_board.html"><button>View Opponent\'s Board</button></a>')
-        wfile_writestr(wfile, '</div>')
+        wfile_writestr(wfile, '</div>') # Close button container
 
         # Render list of lost ships
-        if len(game.lost_ships) > 0:
-            wfile_writestr(wfile, "<p>You have lost:</p><ul>")
-            for lost in game.lost_ships:
-                wfile_writestr(wfile, "<li>%s</li>" % BattleShipGame.TILE_NAME[lost])
-            wfile_writestr(wfile, "</ul>") # Close ship list
-
+        render_sunk_list(wfile, game, "You have lost:")
         wfile_writestr(wfile, '</body></html>') # Close html
 
 
 def render_opponent_board(wfile, path):
-    return
+    # Render header
+    wfile_writestr(wfile, '<html><head><title>Battleship</title><link rel="stylesheet" href="css/board.css"><head><body>')
 
+    # Open the file containing the board and render it
+    game = BattleShip.load_bs_game(path)
+    render_board(wfile, game)
 
-# Create an instance of the game
-game = BattleShipGame(argv[2])
+    # Render buttons
+    wfile_writestr(wfile, '<div id="button-container">')
+    wfile_writestr(wfile, '<a href="opponent_board.html"><button>Refresh</button></a>')
+    wfile_writestr(wfile, '<a href="own_board.html"><button>View Your Board</button></a>')
+    wfile_writestr(wfile, '</div>') # Close button container
+
+    # Render list of sunk ships
+    render_sunk_list(wfile, game, "You have sunk:")
+    wfile_writestr(wfile, '</body></html>') # Close html
+
 
 class BattleShipServer(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -144,7 +92,8 @@ class BattleShipServer(BaseHTTPRequestHandler):
         if self.path == "/own_board.html":
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            render_own_board(self.wfile, game)
+            global my_game
+            render_own_board(self.wfile, my_game)
             return
 
         if self.path == "/opponent_board.html":
@@ -183,17 +132,18 @@ class BattleShipServer(BaseHTTPRequestHandler):
             return
 
         # Run game logic
-        result,ship = game.fire(x, y)
+        global my_game
+        result,ship = my_game.fire(x, y)
 
         # If shot was out of bounds, send BAD REQUEST and return
-        if result == BattleShipGame.SHOT_OUT_OF_BOUNDS:
+        if result == BattleShip.BSGame.SHOT_OUT_OF_BOUNDS:
             self.send_response(400)
             self.end_headers()
             print(time.asctime(), "Shot out of bounds - %s,%s" % (x, y))
             return
 
         # If shot has already been fired in the same place, send GONE and return
-        if result == BattleShipGame.SHOT_REDUNDANT:
+        if result == BattleShip.BSGame.SHOT_REDUNDANT:
             self.send_response(410)
             self.end_headers()
             print(time.asctime(), "Shot redundant - %s,%s" % (x, y))
@@ -204,18 +154,21 @@ class BattleShipServer(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/text")
         self.end_headers()
 
-        if result == BattleShipGame.SHOT_MISS:
+        if result == BattleShip.BSGame.SHOT_MISS:
             self.wfile.write(bytes("hit=0", "utf-8"))
             print(time.asctime(), "Shot missed - %s,%s" % (x, y))
 
-        elif result == BattleShipGame.SHOT_HIT:
+        elif result == BattleShip.BSGame.SHOT_HIT:
             self.wfile.write(bytes("hit=1", "utf-8"))
             print(time.asctime(), "Shot hit %s - %s,%s" % (ship, x, y))
 
-        elif result == BattleShipGame.SHOT_SINK:
+        elif result == BattleShip.BSGame.SHOT_SINK:
             self.wfile.write(bytes("hit=1&sink=%s" % ship, "utf-8"))
             print(time.asctime(), "Shot sank %s - %s,%s" % (ship, x, y))
 
+
+# Create an instance of the game
+my_game = BattleShip.load_bs_game(argv[2])
 
 # Configuration of the server
 HOST_NAME = "localhost"
