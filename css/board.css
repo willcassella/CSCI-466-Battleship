@@ -1,0 +1,9 @@
+.row {
+    display: flex;
+    flex-direction: horizontal;
+}
+
+.tile {
+    width: 20px;
+    height: 20px;
+}
