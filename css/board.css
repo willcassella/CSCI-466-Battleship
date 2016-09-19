@@ -69,6 +69,18 @@ h1 {
     background-image: url("../images/submarine.png");
 }
 
+.carrier {
+    background-image: url("../images/carrier.png");
+}
+
+.destroyer {
+    background-image: url("../images/destroyer.png");
+}
+
+.cruiser {
+    background-image: url("../images/cruiser.png");
+}
+
 .ship .shot {
     background-image: url("../images/explosion.png");
 }
