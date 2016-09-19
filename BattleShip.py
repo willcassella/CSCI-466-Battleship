@@ -92,6 +92,7 @@ def load_bs_game(path):
     file.close()
     return game
 
+
 def save_bs_game(game, path):
     file = open(path, 'w')
     for y in range(BSGame.BOARD_HEIGHT):
@@ -101,3 +102,4 @@ def save_bs_game(game, path):
     for ship in game.lost_ships:
         file.write(ship)
     file.close()
+

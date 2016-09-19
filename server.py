@@ -116,6 +116,7 @@ class BattleShipServer(BaseHTTPRequestHandler):
                 self.wfile.write(f.read())
             return
 
+
     def do_POST(self):
         # Get the post arguments
         length = int(self.headers['Content-Length'])
