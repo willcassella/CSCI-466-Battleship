@@ -1,0 +1,6 @@
+We used the same format as described in the problem - Client sends an HTTP POST request with "x={X}&y={Y}" as arguments, and the server
+returns "hit={0/1}[&sink={C/R/B/D/S}]" if the request was formatted correctly and identifies a new tile, BAD REQUEST if the request doesn't
+contain an x/y argument and GONE if the request identifies a tile that has already been hit.
+
+The serialization format for the game identifies the layout of the board, and which ships have been sunk. It works with the layout described in the
+assignment, and introduces the values 'X' (for ship tiles that have been hit, but the ship type is unknown) and '?' for unidentified tiles.
