@@ -9,6 +9,10 @@ h1 {
     text-align: center;
 }
 
+#button-container {
+    height: 20px;
+}
+
 #button-container a:first-child {
     margin-left: 50px;
     float: left;

@@ -15,7 +15,7 @@ class BSGame:
     TILE_UNKNOWN = '?' # Only used for opponent's board, indicates we don't know what's gonna come through that tile
     TILE_UNKNOWN_SHIP = 'X' # Only used for opponent's board, indicates we hit a sihp (but we don't know what kind)
     TILE_NAME = {TILE_WATER: 'water', TILE_CARRIER: 'carrier', TILE_BATTLESHIP: 'battleship', TILE_CRUISER: 'cruiser',
-                 TILE_UNKNOWN: 'unknown', TILE_UNKNOWN_SHIP: 'unknown_ship', TILE_SUBMARINE: 'submarine', TILE_DESTROYER: 'destroyer'}
+                 TILE_UNKNOWN: 'unknown', TILE_UNKNOWN_SHIP: 'unknown-ship', TILE_SUBMARINE: 'submarine', TILE_DESTROYER: 'destroyer'}
 
     def __init__(self):
         # Initialze board and record of opponent's shots
